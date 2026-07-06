@@ -2,16 +2,9 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-or
 
 /**
  * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
  */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +18,49 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Papers table: stores uploaded paper metadata and analysis status.
+ */
+export const papers = mysqlTable("papers", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: text("title"),
+  abstract: text("abstract"),
+  keywords: text("keywords"), // JSON array of strings
+  directions: text("directions"), // JSON array of identified directions
+  fileKey: varchar("fileKey", { length: 512 }).notNull(),
+  fileUrl: varchar("fileUrl", { length: 512 }).notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileSize: int("fileSize"),
+  extractedText: text("extractedText"), // full extracted text from the paper (mediumtext)
+  status: mysqlEnum("status", ["uploading", "extracting", "analyzing", "completed", "failed"])
+    .default("uploading")
+    .notNull(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Paper = typeof papers.$inferSelect;
+export type InsertPaper = typeof papers.$inferInsert;
+
+/**
+ * Analyses table: stores per-direction deep analysis results.
+ */
+export const analyses = mysqlTable("analyses", {
+  id: int("id").autoincrement().primaryKey(),
+  paperId: int("paperId").notNull(),
+  direction: varchar("direction", { length: 255 }).notNull(), // e.g. "DFT", "Molecular Dynamics"
+  directionCn: varchar("directionCn", { length: 255 }), // Chinese name of the direction
+  summary: text("summary"), // brief summary of this direction in the paper
+  content: text("content"), // full deep analysis markdown content
+  status: mysqlEnum("status", ["pending", "analyzing", "completed", "failed"])
+    .default("pending")
+    .notNull(),
+  orderIndex: int("orderIndex").default(0).notNull(), // display order
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Analysis = typeof analyses.$inferSelect;
+export type InsertAnalysis = typeof analyses.$inferInsert;

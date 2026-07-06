@@ -1,11 +1,10 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, papers, analyses, Paper, Analysis, InsertPaper, InsertAnalysis } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -17,6 +16,8 @@ export async function getDb() {
   }
   return _db;
 }
+
+// ==================== User Queries ====================
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -85,8 +86,69 @@ export async function getUserByOpenId(openId: string) {
   }
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ==================== Paper Queries ====================
+
+export async function createPaper(paper: InsertPaper): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(papers).values(paper);
+  return (result as any)[0].insertId;
+}
+
+export async function getPaperById(id: number): Promise<Paper | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(papers).where(eq(papers.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getPapersByUserId(userId: number): Promise<Paper[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(papers).where(eq(papers.userId, userId)).orderBy(desc(papers.createdAt));
+}
+
+export async function updatePaper(id: number, data: Partial<Omit<Paper, "id" | "createdAt">>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(papers).set(data).where(eq(papers.id, id));
+}
+
+// ==================== Analysis Queries ====================
+
+export async function createAnalysis(analysis: InsertAnalysis): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(analyses).values(analysis);
+  return (result as any)[0].insertId;
+}
+
+export async function getAnalysesByPaperId(paperId: number): Promise<Analysis[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db.select().from(analyses).where(eq(analyses.paperId, paperId)).orderBy(analyses.orderIndex);
+}
+
+export async function updateAnalysis(id: number, data: Partial<Omit<Analysis, "id" | "createdAt">>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(analyses).set(data).where(eq(analyses.id, id));
+}
+
+export async function createMultipleAnalyses(analysesList: InsertAnalysis[]): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  if (analysesList.length === 0) return;
+  await db.insert(analyses).values(analysesList);
+}

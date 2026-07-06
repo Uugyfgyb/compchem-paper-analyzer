@@ -1,0 +1,29 @@
+# Project TODO
+
+- [x] Database schema: papers table (title, abstract, keywords, directions, file_key, status, user_id)
+- [x] Database schema: analyses table (paper_id, direction, content, status)
+- [x] Install dependencies: pdf-parse, mammoth, katex/react-markdown
+- [x] Global CSS: deep violet to vivid teal gradient background
+- [x] Layout: bold large white title bottom-left, thin subtitle top-right
+- [x] File upload API: accept PDF/Word, store to S3, extract text
+- [x] Text extraction: PDF parsing with pdf-parse
+- [x] Text extraction: Word parsing with mammoth
+- [x] AI analysis engine: direction identification (structured JSON output)
+- [x] AI analysis engine: per-direction deep analysis with reasoning
+- [x] tRPC procedures: upload paper, get paper, list papers, get analysis status
+- [x] Frontend: Landing/Home page with immersive gradient and asymmetric layout
+- [x] Frontend: File upload component (drag & drop + click)
+- [x] Frontend: Paper overview card (title, abstract, keywords, directions)
+- [x] Frontend: Analysis progress indicator (real-time, per-direction)
+- [x] Frontend: Direction tabs/cards with Markdown + LaTeX rendering
+- [x] Frontend: History page showing past analyses
+- [x] LaTeX formula rendering support (KaTeX)
+- [x] Progressive result display (show each direction as it completes)
+- [x] S3 file storage integration for uploaded papers
+- [x] Vitest unit tests for core backend logic
+- [x] API Key configuration page as first-entry experience
+- [x] Support user-provided OpenAI API Key (localStorage) with platform built-in as fallback
+- [x] More academic and grand visual style (serif+sans-serif mix, more whitespace, scholarly feel)
+- [x] Fix: consistent bottom-left title + top-right subtitle on all pages
+- [x] Fix: pass user API key from client to server for LLM calls (header-based)
+- [x] Fix: add serif font for headings (academic style serif+sans pairing)
